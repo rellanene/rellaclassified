@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Ad</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #FAF3E0; /* Soft Cream */
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        h2 {
+            text-align: center;
+            color: #6C5B7B; /* Deep Plum */
+            margin-bottom: 25px;
+        }
+
+        input, select, textarea, button {
+            width: 100%;
+            max-width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #4A3F5F; /* Dark Purple */
+            font-size: 14px;
+            box-sizing: border-box;
+            word-wrap: break-word;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            background-color: #C06C84; /* Rose Pink */
+            color: #fff;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #6C5B7B; /* Deep Plum */
+            transform: scale(1.03);
+        }
+
+        .cancel {
+            display: inline-block;
+            text-align: center;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            background: #6C5B7B; /* Deep Plum */
+            color: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .cancel:hover {
+            background: #4A3F5F; /* Dark Purple */
+        }
+
+        /* Flash messages */
+        .flash {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .flash-success {
+            background-color: #4CAF50; /* Green */
+        }
+
+        .flash-danger {
+            background-color: #E74C3C; /* Red */
+        }
+
+        .flash-warning {
+            background-color: #C06C84; /* Rose Pink */
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h2>Edit Ad</h2>
+
+    <form method="POST">
+        <input type="text" name="title" value="{{ ad.title }}" placeholder="Title" required>
+
+        <select name="category_id" required>
+            {% for c in categories %}
+                <option value="{{ c.id }}" {% if c.id == ad.category_id %}selected{% endif %}>
+                    {{ c.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <textarea name="description" rows="5" placeholder="Description" required>{{ ad.description }}</textarea>
+
+        <input type="text" name="contact" value="{{ ad.contact }}" placeholder="Contact info" required>
+
+        <select name="province" required>
+            <option value="Gauteng" {% if ad.province == 'Gauteng' %}selected{% endif %}>Gauteng</option>
+            <option value="KwaZulu" {% if ad.province == 'KwaZulu' %}selected{% endif %}>KwaZulu</option>
+        </select>
+
+        <select name="town" required>
+            <option value="Midrand" {% if ad.town == 'Midrand' %}selected{% endif %}>Midrand</option>
+            <option value="Durban" {% if ad.town == 'Durban' %}selected{% endif %}>Durban</option>
+        </select>
+
+        <button type="submit">Update Ad</button>
+    </form>
+
+    <a href="{{ url_for('index') }}" class="cancel">Cancel</a>
+</div>
+
+</body>
+</html>

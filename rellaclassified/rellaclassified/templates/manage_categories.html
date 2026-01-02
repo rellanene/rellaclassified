@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Categories | Admin</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #FAF3E0; /* Soft Cream */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: #ffffff;
+            width: 500px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            text-align: center;
+            color: #6C5B7B; /* Deep Plum */
+            margin-bottom: 25px;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #bcd4ff;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #6C5B7B; /* Deep Plum */
+            box-shadow: 0 0 5px rgba(108,91,123,0.4);
+        }
+
+        button {
+            padding: 10px 18px;
+            background: #C06C84; /* Rose Pink */
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #6C5B7B; /* Deep Plum */
+        }
+
+        .flash {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .flash.success {
+            background: #4CAF50; /* Green */
+            color: #ffffff;
+        }
+
+        .flash.danger {
+            background: #E74C3C; /* Red */
+            color: #ffffff;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            background: #F8B195; /* Light Pink */
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: #2E2E2E; /* Charcoal */
+        }
+
+        .category-name {
+            color: #4A3F5F; /* Dark Purple */
+        }
+
+        .footer-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .footer-link a {
+            text-decoration: none;
+            color: #6C5B7B; /* Deep Plum */
+            font-weight: bold;
+        }
+
+        .footer-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Manage Categories</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <input type="text" name="name" placeholder="Enter new category" required>
+        <button type="submit">Add</button>
+    </form>
+
+    <ul>
+        {% for c in categories %}
+            <li>
+                <span class="category-name">{{ c[1] }}</span>
+            </li>
+        {% else %}
+            <li>No categories found.</li>
+        {% endfor %}
+    </ul>
+
+    <div class="footer-link">
+        <a href="/">← Back to Home</a>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Classifieds{% endblock %}</title>
+    <style>
+        /* Global page background */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #FAF3E0; /* Soft Cream */
+            color: #2E2E2E; /* Charcoal text */
+        }
+
+        /* Navbar/Header */
+        header {
+            background-color: #6C5B7B; /* Deep Plum */
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+
+        header a:hover {
+            text-decoration: underline;
+        }
+
+        /* Card/Container */
+        .card {
+            background-color: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            margin: 40px auto;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: #C06C84; /* Rose Pink */
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            display: inline-block;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #6C5B7B; /* Deep Plum */
+        }
+
+        /* Flash messages */
+        .flash-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+        .flash-success {
+            background-color: #4CAF50; /* Green */
+        }
+
+        .flash-error {
+            background-color: #E74C3C; /* Red */
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+<header>
+    <div><strong>Classified Ads</strong></div>
+    <div>
+        {% if session.get('username') %}
+            Hello, {{ session.username }} |
+            <a href="/post">Post Ad</a>
+            {% if session.get("is_admin") %}
+                | <a href="/admin/categories">Manage Categories</a>
+                | <a href="/admin/manage_locations">Manage Locations</a>
+            {% endif %}
+            | <a href="/logout">Logout</a>
+        {% else %}
+            <a href="/login">Login</a> |
+            <a href="/register">Register</a>
+        {% endif %}
+    </div>
+</header>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+</body>
+</html>

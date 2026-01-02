@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Locations{% endblock %}
+
+{% block content %}
+
+<div style="
+    background: #FAF3E0; /* Soft Cream */
+    padding: 30px;
+    border-radius: 14px;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+    max-width: 600px;
+    margin: 40px auto;
+">
+
+    <h2 style="
+        text-align:center;
+        color:#6C5B7B; /* Deep Plum */
+        margin-bottom: 25px;
+    ">
+        Manage Locations
+    </h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div style="
+                    background:
+                        {% if category=='success' %}#4CAF50
+                        {% elif category=='warning' %}#C06C84
+                        {% else %}#E74C3C{% endif %};
+                    color:#ffffff;
+                    padding:12px;
+                    margin-bottom:15px;
+                    border-radius:8px;
+                    text-align:center;
+                    font-weight:bold;
+                ">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Add Province -->
+    <form method="POST" style="margin-bottom: 30px;">
+        <label style="font-weight:bold; color:#2E2E2E;">Add Province</label>
+        <input type="text" name="province_name" placeholder="Province name" required
+               style="
+                   width:100%;
+                   padding:12px;
+                   margin-bottom:12px;
+                   border-radius:8px;
+                   border:1px solid #4A3F5F; /* Dark Purple */
+                   font-size:14px;
+                   background:#ffffff;
+               ">
+        <button type="submit" style="
+            width:100%;
+            padding:14px;
+            background:#C06C84; /* Rose Pink */
+            color:#ffffff;
+            border:none;
+            border-radius:8px;
+            font-weight:bold;
+            cursor:pointer;
+        ">
+            Add Province
+        </button>
+    </form>
+
+    <!-- Add Town -->
+    <form method="POST" style="margin-bottom: 30px;">
+        <label style="font-weight:bold; color:#2E2E2E;">Add Town</label>
+
+        <select name="province_id" required
+                style="
+                    width:100%;
+                    padding:12px;
+                    margin-bottom:12px;
+                    border-radius:8px;
+                    border:1px solid #4A3F5F; /* Dark Purple */
+                    font-size:14px;
+                    background:#ffffff;
+                ">
+            <option value="">Select Province</option>
+            {% for p in provinces %}
+                <option value="{{ p.id }}">{{ p.name }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="text" name="town_name" placeholder="Town name" required
+               style="
+                   width:100%;
+                   padding:12px;
+                   margin-bottom:12px;
+                   border-radius:8px;
+                   border:1px solid #4A3F5F; /* Dark Purple */
+                   font-size:14px;
+                   background:#ffffff;
+               ">
+
+        <button type="submit" style="
+            width:100%;
+            padding:14px;
+            background:#C06C84; /* Rose Pink */
+            color:#ffffff;
+            border:none;
+            border-radius:8px;
+            font-weight:bold;
+            cursor:pointer;
+        ">
+            Add Town
+        </button>
+    </form>
+
+    <!-- Existing Provinces and Towns -->
+    <h3 style="
+        color:#6C5B7B; /* Deep Plum */
+        margin-bottom:12px;
+    ">
+        Existing Locations
+    </h3>
+
+    <ul style="list-style:none; padding-left:0;">
+        {% for t in towns %}
+            <li style="
+                padding:10px 12px;
+                border-bottom:1px solid #F8B195; /* Light Pink */
+                color:#2E2E2E; /* Charcoal */
+                background:#ffffff;
+            ">
+                <strong style="color:#6C5B7B;">{{ t.province_name }}:</strong>
+                {{ t.name }}
+            </li>
+        {% endfor %}
+    </ul>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | Classifieds</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #FAF3E0; /* Soft Cream */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: #ffffff;
+            width: 360px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #6C5B7B; /* Deep Plum */
+        }
+
+        label {
+            font-weight: bold;
+            color: #2E2E2E; /* Charcoal */
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 18px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #6C5B7B; /* Deep Plum */
+            box-shadow: 0 0 5px rgba(108,91,123,0.4);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #C06C84; /* Rose Pink */
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #6C5B7B; /* Deep Plum */
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .links a {
+            text-decoration: none;
+            color: #6C5B7B; /* Deep Plum */
+            font-weight: bold;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .flash {
+            background: #E74C3C; /* Error Red */
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .button {
+            background: #C06C84; /* Rose Pink */
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background: #6C5B7B; /* Deep Plum */
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>User Login</h2>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash">
+                {{ messages[0] }}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <a href="/" class="button" style="
+        display: inline-block;
+        margin-bottom: 20px;
+        text-decoration: none;
+        text-align: center;
+    ">
+        Home
+    </a>
+
+    <form method="POST">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="Enter your email" required>
+
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Enter your password" required>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <div class="links">
+        <p>Don’t have an account?</p>
+        <a href="/register">Create an account</a>
+    </div>
+</div>
+
+</body>
+</html>

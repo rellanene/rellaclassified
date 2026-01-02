@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Post Ad | Classifieds{% endblock %}
+
+{% block content %}
+<!-- Full page wrapper -->
+<div style="
+    min-height: 100vh;
+    width: 100%;
+    background: #FAF3E0; /* Soft Cream */
+    display: flex;
+    flex-direction: column;
+">
+
+    <!-- Navbar -->
+    
+
+    <!-- Page content -->
+    <div style="
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 20px;
+        box-sizing: border-box;
+    ">
+        <div style="
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+        ">
+            <!-- Page heading -->
+            <h2 style="text-align:center; color:#6C5B7B; margin-bottom:30px; font-size:28px;">Post a New Ad</h2>
+
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div id="popup-message" style="
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #4CAF50;
+                        color: white;
+                        padding: 15px 25px;
+                        border-radius: 8px;
+                        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+                        font-weight: bold;
+                        z-index: 1000;">
+                        {{ messages[0] }}
+                    </div>
+                    <script>
+                        setTimeout(function () {
+                            const popup = document.getElementById("popup-message");
+                            if (popup) {
+                                popup.style.transition = "opacity 0.5s ease";
+                                popup.style.opacity = "0";
+                                setTimeout(() => popup.remove(), 500);
+                            }
+                        }, 5000);
+                    </script>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Post Ad Form -->
+            <form method="POST" style="display:flex; flex-direction:column; gap:18px;">
+                
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:48%;">
+                        <label style="font-weight:bold; color:#2E2E2E;">Province</label>
+                        <select name="province_id" required style="width:100%; padding:12px; border-radius:8px; border:1px solid #4A3F5F; color:#2E2E2E;">
+                            <option value="">Select Province</option>
+                            {% for p in provinces %}
+                                <option value="{{ p.id }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="flex:1; min-width:48%;">
+                        <label style="font-weight:bold; color:#2E2E2E;">Town</label>
+                        <select name="town_id" required style="width:100%; padding:12px; border-radius:8px; border:1px solid #4A3F5F; color:#2E2E2E;">
+                            <option value="">Select Town</option>
+                            {% for t in towns %}
+                                <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight:bold; color:#2E2E2E;">Title</label>
+                    <input type="text" name="title" placeholder="Ad title" required style="width:100%; padding:12px; border-radius:8px; border:1px solid #4A3F5F; color:#2E2E2E;">
+                </div>
+
+                <div>
+                    <label style="font-weight:bold; color:#2E2E2E;">Category</label>
+                    <select name="category_id" required style="width:100%; padding:12px; border-radius:8px; border:1px solid #4A3F5F; color:#2E2E2E;">
+                        {% for c in categories %}
+                            <option value="{{ c[0] }}">{{ c[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-weight:bold; color:#2E2E2E;">Description</label>
+                    <textarea name="description" placeholder="Describe your ad..." rows="5" required style="width:100%; padding:12px; border-radius:8px; border:1px solid #4A3F5F; color:#2E2E2E;"></textarea>
+                </div>
+
+                <div>
+                    <label style="font-weight:bold; color:#2E2E2E;">Contact Info</label>
+                    <input type="text" name="contact" placeholder="Email or phone number" required style="width:100%; padding:12px; border-radius:8px; border:1px solid #4A3F5F; color:#2E2E2E;">
+                </div>
+
+                <button type="submit" style="
+                    padding:14px;
+                    background:#C06C84;
+                    color:white;
+                    border:none;
+                    border-radius:8px;
+                    font-weight:bold;
+                    cursor:pointer;
+                    font-size:16px;
+                    transition: background 0.3s ease;
+                " onmouseover="this.style.background='#6C5B7B';" onmouseout="this.style.background='#C06C84';">
+                    Post Ad
+                </button>
+            </form>
+
+            <!-- Admin buttons -->
+            {% if session.get("is_admin") %}
+                <div style="display:flex; justify-content:center; gap:15px; margin-top:25px; flex-wrap:wrap;">
+                    <a href="{{ url_for('manage_categories') }}" style="
+                        text-align:center;
+                        text-decoration:none;
+                        background:#C06C84;
+                        color:white;
+                        padding:12px 20px;
+                        border-radius:8px;
+                        font-weight:bold;
+                        transition: background 0.3s ease;
+                    " onmouseover="this.style.background='#6C5B7B';" onmouseout="this.style.background='#C06C84';">
+                        ← Back to Admin Home
+                    </a>
+
+                    <a href="/admin/manage_locations" style="
+                        text-align:center;
+                        text-decoration:none;
+                        background:#C06C84;
+                        color:white;
+                        padding:12px 20px;
+                        border-radius:8px;
+                        font-weight:bold;
+                        transition: background 0.3s ease;
+                    " onmouseover="this.style.background='#6C5B7B';" onmouseout="this.style.background='#C06C84';">
+                        Manage Locations
+                    </a>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
