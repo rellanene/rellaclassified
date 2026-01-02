@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div style="
+    max-width:1000px;
+    margin:40px auto;
+    padding:30px;
+    background:#ffffff;
+    border-radius:16px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
+">
+
+    <h2 style="text-align:center; color:#4A3F5F; margin-bottom:30px;">
+        Admin Dashboard
+    </h2>
+
+    <!-- Stats -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:20px; margin-bottom:40px;">
+        <div class="card">Ads<br><strong>{{ total_ads }}</strong></div>
+        <div class="card">Users<br><strong>{{ total_users }}</strong></div>
+        <div class="card">Categories<br><strong>{{ total_categories }}</strong></div>
+        <div class="card">Provinces<br><strong>{{ total_provinces }}</strong></div>
+        <div class="card">Towns<br><strong>{{ total_towns }}</strong></div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">
+        <a href="/admin/categories" class="admin-btn">Manage Categories</a>
+        <a href="/admin/manage_locations" class="admin-btn">Manage Locations</a>
+        <a href="/admin/ads" class="admin-btn">Manage Ads</a>
+    </div>
+</div>
+
+<style>
+.card{
+    background:#F7F6FB;
+    padding:20px;
+    border-radius:14px;
+    text-align:center;
+    font-size:16px;
+    color:#4A3F5F;
+    font-weight:600;
+}
+.card strong{
+    font-size:28px;
+    display:block;
+    margin-top:8px;
+}
+.admin-btn{
+    background:#6C5B7B;
+    color:white;
+    padding:14px 22px;
+    border-radius:10px;
+    text-decoration:none;
+    font-weight:bold;
+}
+.admin-btn:hover{
+    opacity:0.9;
+}
+</style>
+{% endblock %}

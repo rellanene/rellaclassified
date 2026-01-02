@@ -85,31 +85,33 @@ def index():
 
 
 # ---------------- REGISTER ----------------
+# Example register route
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         username = request.form["username"]
-        email = request.form["email"]
-        password = generate_password_hash(request.form["password"])
+        email = request.form["email"]  # make sure this field exists in your form
+        password = request.form["password"]
+        hashed_password = generate_password_hash(password)
+
+        # Set admin by default
+        is_admin = 1
 
         conn = get_db_connection()
         cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO users (username, email, password, is_admin) VALUES (%s, %s, %s, %s)",
+            (username, email, hashed_password, is_admin)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
 
-        try:
-            cursor.execute(
-                "INSERT INTO users (username, email, password) VALUES (%s, %s, %s)",
-                (username, email, password)
-            )
-            conn.commit()
-            flash("Registration successful! Please login.", "success")
-            return redirect(url_for("login"))
-        except:
-            flash("Username or email already exists.", "danger")
-        finally:
-            cursor.close()
-            conn.close()
+        flash("User registered successfully!", "success")
+        return redirect(url_for("login"))
 
     return render_template("register.html")
+
 
 # ---------------- LOGIN ----------------
 @app.route("/login", methods=["GET", "POST"])
@@ -285,6 +287,90 @@ def delete_ad(ad_id):
     flash("Ad deleted successfully")
     return redirect(url_for("index"))
 
+#-------------------VIEW & DELETE ADS-----------
+@app.route("/admin/ads")
+def admin_ads():
+    if not session.get("is_admin"):
+        flash("Admin access only.", "danger")
+        return redirect(url_for("index"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT ads.id, ads.title, ads.contact,
+               categories.name AS category,
+               ads.province, ads.town
+        FROM ads
+        JOIN categories ON ads.category_id = categories.id
+        ORDER BY ads.id DESC
+    """)
+    ads = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("admin_ads.html", ads=ads)
+
+#-------------------EDIT AD-----------------
+@app.route("/admin/edit_ad/<int:ad_id>", methods=["GET", "POST"])
+def admin_edit_ad(ad_id):
+    if not session.get("is_admin"):
+        flash("Admin access only.", "danger")
+        return redirect(url_for("index"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Fetch ad
+    cursor.execute("SELECT * FROM ads WHERE id = %s", (ad_id,))
+    ad = cursor.fetchone()
+
+    if not ad:
+        flash("Ad not found.", "danger")
+        return redirect(url_for("admin_ads"))
+
+    categories = get_categories()
+    provinces = get_provinces()
+    towns = get_towns()  # existing function
+
+    if request.method == "POST":
+        cursor.execute("""
+            UPDATE ads SET
+                title=%s,
+                category_id=%s,
+                description=%s,
+                contact=%s,
+                province=%s,
+                town=%s
+            WHERE id=%s
+        """, (
+            request.form["title"],
+            request.form["category_id"],
+            request.form["description"],
+            request.form["contact"],
+            request.form["province"],
+            request.form["town"],
+            ad_id
+        ))
+
+        conn.commit()
+        flash("Ad updated successfully.", "success")
+        return redirect(url_for("admin_ads"))
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "admin_edit_ad.html",
+        ad=ad,
+        categories=categories,
+        provinces=provinces,
+        towns=towns
+    )
+
+
+
 #-------------------MANAGE LOCATION-------
 @app.route("/admin/manage_locations", methods=["GET", "POST"])
 def manage_locations():
@@ -344,6 +430,20 @@ def manage_locations():
 
     return render_template("manage_locations.html", provinces=provinces, towns=towns)
 
+#---------------GET TOWN---------
+@app.route("/get_towns/<int:province_id>")
+def get_towns_for_province(province_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id, name FROM towns WHERE province_id = %s ORDER BY name", (province_id,))
+    towns = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    # Return JSON list of towns
+    return {"towns": towns}
+
+
 
 
 
@@ -375,6 +475,42 @@ def manage_categories():
         categories=get_categories()
     )
 
+#--------------DASH BOARD----------------
+@app.route("/admin")
+def admin_dashboard():
+    if not session.get("is_admin"):
+        flash("Admin access only.", "danger")
+        return redirect(url_for("index"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM ads")
+    total_ads = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM categories")
+    total_categories = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM provinces")
+    total_provinces = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM towns")
+    total_towns = cursor.fetchone()[0]
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "admin_dashboard.html",
+        total_ads=total_ads,
+        total_users=total_users,
+        total_categories=total_categories,
+        total_provinces=total_provinces,
+        total_towns=total_towns
+    )
 
 # ---------------- LOGOUT ----------------
 @app.route("/logout")

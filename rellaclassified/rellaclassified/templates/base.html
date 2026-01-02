@@ -85,23 +85,36 @@
 </head>
 <body>
 
-<header>
-    <div><strong>Classified Ads</strong></div>
-    <div>
-        {% if session.get('username') %}
-            Hello, {{ session.username }} |
-            <a href="/post">Post Ad</a>
-            {% if session.get("is_admin") %}
-                | <a href="/admin/categories">Manage Categories</a>
-                | <a href="/admin/manage_locations">Manage Locations</a>
-            {% endif %}
-            | <a href="/logout">Logout</a>
-        {% else %}
-            <a href="/login">Login</a> |
-            <a href="/register">Register</a>
-        {% endif %}
-    </div>
-</header>
+	<header style="
+	    background:#6C5B7B;
+	    color:white;
+	    padding:15px 30px;
+	    display:flex;
+	    justify-content:space-between;
+	    align-items:center;
+	">
+	    <strong>Classified Ads</strong>
+
+	    <nav>
+	        {% if session.get("username") %}
+	            Hello, {{ session.username }} |
+
+	            <a href="/post" style="color:white;text-decoration:none;">Post Ad</a>
+
+	            {% if session.get("is_admin") %}
+	                | <a href="/admin" style="color:white;text-decoration:none;">Admin Dashboard</a>
+	                | <a href="/admin/categories" style="color:white;text-decoration:none;">Manage Categories</a>
+	                | <a href="/admin/manage_locations" style="color:white;text-decoration:none;">Manage Locations</a>
+	            {% endif %}
+
+	            | <a href="/logout" style="color:white;text-decoration:none;">Logout</a>
+	        {% else %}
+	            <a href="/login" style="color:white;text-decoration:none;">Login</a> |
+	            <a href="/register" style="color:white;text-decoration:none;">Register</a>
+	        {% endif %}
+	    </nav>
+	</header>
+
 
 <main>
     {% block content %}{% endblock %}

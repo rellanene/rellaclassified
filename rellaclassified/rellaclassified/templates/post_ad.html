@@ -67,26 +67,27 @@
             <!-- Post Ad Form -->
             <form method="POST" style="display:flex; flex-direction:column; gap:18px;">
                 
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:48%;">
-                        <label style="font-weight:bold; color:#2E2E2E;">Province</label>
-                        <select name="province_id" required style="width:100%; padding:12px; border-radius:8px; border:1px solid #4A3F5F; color:#2E2E2E;">
-                            <option value="">Select Province</option>
-                            {% for p in provinces %}
-                                <option value="{{ p.id }}">{{ p.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div style="flex:1; min-width:48%;">
-                        <label style="font-weight:bold; color:#2E2E2E;">Town</label>
-                        <select name="town_id" required style="width:100%; padding:12px; border-radius:8px; border:1px solid #4A3F5F; color:#2E2E2E;">
-                            <option value="">Select Town</option>
-                            {% for t in towns %}
-                                <option value="{{ t.id }}">{{ t.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
+				<div style="display:flex; gap:10px; flex-wrap:wrap;">
+				    <div style="flex:1; min-width:48%;">
+				        <label style="font-weight:bold; color:#2E2E2E;">Province</label>
+				        <select name="province_id" id="provinceSelect" required style="width:100%; padding:12px; border-radius:8px; border:1px solid #4A3F5F; color:#2E2E2E;">
+				            <option value="">Select Province</option>
+				            {% for p in provinces %}
+				                <option value="{{ p.id }}">{{ p.name }}</option>
+				            {% endfor %}
+				        </select>
+				    </div>
+				    <div style="flex:1; min-width:48%;">
+				        <label style="font-weight:bold; color:#2E2E2E;">Town</label>
+				        <select name="town_id" id="townSelect" required style="width:100%; padding:12px; border-radius:8px; border:1px solid #4A3F5F; color:#2E2E2E;">
+				            <option value="">Select Town</option>
+				            {% for t in towns %}
+				                <option value="{{ t.id }}">{{ t.name }}</option>
+				            {% endfor %}
+				        </select>
+				    </div>
+				</div>
+
 
                 <div>
                     <label style="font-weight:bold; color:#2E2E2E;">Title</label>
@@ -126,6 +127,32 @@
                     Post Ad
                 </button>
             </form>
+			<script>
+			document.getElementById("provinceSelect").addEventListener("change", function() {
+			    const provinceId = this.value;
+			    const townSelect = document.getElementById("townSelect");
+
+			    // Clear current towns
+			    townSelect.innerHTML = '<option value="">Select Town</option>';
+
+			    if (provinceId) {
+			        fetch(`/get_towns/${provinceId}`)
+			        .then(response => response.json())
+			        .then(data => {
+			            data.towns.forEach(town => {
+			                const option = document.createElement("option");
+			                option.value = town.id;
+			                option.textContent = town.name;
+			                townSelect.appendChild(option);
+			            });
+			        })
+			        .catch(error => {
+			            console.error("Error fetching towns:", error);
+			        });
+			    }
+			});
+			</script>
+
 
             <!-- Admin buttons -->
             {% if session.get("is_admin") %}
@@ -142,6 +169,7 @@
                     " onmouseover="this.style.background='#6C5B7B';" onmouseout="this.style.background='#C06C84';">
                         ← Back to Admin Home
                     </a>
+					
 
                     <a href="/admin/manage_locations" style="
                         text-align:center;
