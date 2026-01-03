@@ -9,14 +9,13 @@
             margin: 0;
             padding: 0;
             font-family: Arial, Helvetica, sans-serif;
-            background: #FAF3E0; /* Soft Cream */
+            background: #FAF3E0;
             min-height: 100vh;
-            color: #2E2E2E; /* Charcoal */
+            color: #2E2E2E;
         }
 
-        /* Header / Navbar */
         header {
-            background: #6C5B7B; /* Deep Plum */
+            background: #6C5B7B;
             padding: 15px 30px;
             color: #ffffff;
             display: flex;
@@ -31,28 +30,21 @@
             font-weight: bold;
         }
 
-        header a:hover {
-            text-decoration: underline;
-        }
-
         .container {
             max-width: 1000px;
             margin: 30px auto;
             padding: 0 20px;
         }
 
-        /* Flash messages */
         .flash {
-            background: #E74C3C; /* Error / Alerts */
+            background: #E74C3C;
             color: #ffffff;
             padding: 10px;
             border-radius: 6px;
             margin-bottom: 15px;
             text-align: center;
-            font-size: 14px;
         }
 
-        /* Search & Filter */
         .filter-form {
             background: #ffffff;
             padding: 15px;
@@ -69,53 +61,25 @@
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #ccc;
-            font-size: 14px;
         }
 
-        .filter-form button {
+        .filter-form button,
+        .reset-btn {
             padding: 10px 18px;
-            border: none;
-            background: #C06C84; /* Buttons */
+            background: #C06C84;
             color: #ffffff;
             border-radius: 5px;
             font-weight: bold;
+            border: none;
             cursor: pointer;
+            text-decoration: none;
         }
 
-        .filter-form button:hover {
-            background: #6C5B7B; /* Button Hover */
+        .filter-form button:hover,
+        .reset-btn:hover {
+            background: #6C5B7B;
         }
 
-        /* Ads List */
-        .ads-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .ad-card {
-            background: #ffffff;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            position: relative;
-        }
-
-        .ad-card h4 {
-            margin: 0 0 8px;
-            color: #4A3F5F; /* Dark Purple */
-        }
-
-        .ad-card p {
-            margin: 4px 0;
-            color: #2E2E2E;
-        }
-
-        .ad-card small {
-            color: #555;
-        }
-
-        /* Province / Town headings */
         .province-title {
             color: #4A3F5F;
             margin-top: 30px;
@@ -126,7 +90,31 @@
             margin-left: 20px;
         }
 
-        /* Admin Buttons */
+        .ad-card {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0 25px 40px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+            position: relative;
+        }
+
+        .ad-card h3 {
+            color: #6C5B7B;
+            margin-top: 0;
+        }
+
+        .days-badge {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 12px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
         .button {
             padding: 6px 14px;
             border-radius: 5px;
@@ -134,23 +122,14 @@
             text-decoration: none;
             font-size: 13px;
             font-weight: bold;
-            cursor: pointer;
         }
 
         .button-edit {
             background: #C06C84;
         }
 
-        .button-edit:hover {
-            background: #6C5B7B;
-        }
-
         .button-delete {
             background: #E74C3C;
-        }
-
-        .button-delete:hover {
-            opacity: 0.85;
         }
 
         @media (max-width: 600px) {
@@ -188,7 +167,6 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Search & Filter -->
     <form method="GET" class="filter-form">
         <input type="text" name="search" placeholder="Search ads..." value="{{ search }}">
 
@@ -202,48 +180,60 @@
         </select>
 
         <button type="submit">Filter</button>
-
-        <a href="/" style="
-            padding: 10px 18px;
-            background: #C06C84;
-            color: #ffffff;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-        ">
-            Reset
-        </a>
+        <a href="/" class="reset-btn">Reset</a>
     </form>
 
-    <!-- Ads -->
-    <div class="ads-list">
-        {% for province, towns in grouped_ads.items() %}
-            <h2 class="province-title">{{ province }}</h2>
+    {% for province, towns in grouped_ads.items() %}
+        <h2 class="province-title">{{ province }}</h2>
 
-            {% for town, ads in towns.items() %}
-                <h3 class="town-title">📍 {{ town }}</h3>
+        {% for town, ads in towns.items() %}
+            <h3 class="town-title">📍 {{ town }}</h3>
 
-                {% for ad in ads %}
-                    <div class="ad-card" style="margin-left:40px;">
-                        <h4>{{ ad.title }} ({{ ad.category }})</h4>
-                        <p>{{ ad.description }}</p>
-                        <p><strong>Contact:</strong> {{ ad.contact }}</p>
-                        <small>Posted by {{ ad.username }}</small>
+            {% for ad in ads %}
+                <div class="ad-card">
+                    <h3>{{ ad.title }} ({{ ad.category }})</h3>
+                    <p>{{ ad.description }}</p>
+                    <p><strong>Contact:</strong> {{ ad.contact }}</p>
+                    <small>Posted by {{ ad.username }}</small><br>
+					<p>
+					    <strong>Expires on:</strong>
+					    {{ ad.expires_at.strftime('%d %b %Y') }}
+					</p>
 
-                        {% if session.get("is_admin") %}
-                            <div style="position:absolute; top:10px; right:10px;">
-                                <a href="{{ url_for('edit_ad', ad_id=ad.id) }}" class="button button-edit">Edit</a>
-                                <a href="{{ url_for('delete_ad', ad_id=ad.id) }}" class="button button-delete"
-                                   onclick="return confirm('Are you sure you want to delete this ad?');">
-                                    Delete
-                                </a>
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+					<span style="
+					    display:inline-block;
+					    margin-top:8px;
+					    padding:6px 12px;
+					    background:
+					        {% if ad.days_left > 7 %}#4CAF50
+					        {% elif ad.days_left > 0 %}#F8B195
+					        {% else %}#E74C3C{% endif %};
+					    color:white;
+					    border-radius:20px;
+					    font-size:13px;
+					    font-weight:bold;
+					">
+					    {{ ad.days_left }} day{{ 's' if ad.days_left != 1 else '' }} left
+					</span>
+
+
+                    {% if ad.remaining_days is not none %}
+                        
+                    {% endif %}
+
+                    {% if session.get("is_admin") %}
+                        <div style="position:absolute; top:15px; right:15px;">
+                            <a href="{{ url_for('edit_ad', ad_id=ad.id) }}" class="button button-edit">Edit</a>
+                            <a href="{{ url_for('delete_ad', ad_id=ad.id) }}" class="button button-delete"
+                               onclick="return confirm('Delete this ad?');">
+                                Delete
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
             {% endfor %}
         {% endfor %}
-    </div>
+    {% endfor %}
 
 </div>
 

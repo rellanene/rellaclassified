@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # change in production
@@ -25,20 +26,22 @@ def index():
     cursor = conn.cursor(dictionary=True)
 
     query = """
-    SELECT 
-        ads.id,
-        ads.title,
-        ads.description,
-        ads.contact,
-        ads.province,
-        ads.town,
-        users.username,
-        categories.name AS category,
-        ads.category_id
-    FROM ads
-    JOIN users ON ads.user_id = users.id
-    JOIN categories ON ads.category_id = categories.id
-    WHERE 1=1
+        SELECT 
+            ads.id,
+            ads.title,
+            ads.description,
+            ads.contact,
+            ads.province,
+            ads.town,
+            ads.expires_at,
+            GREATEST(DATEDIFF(ads.expires_at, CURDATE()), 0) AS days_left,
+            users.username,
+            categories.name AS category,
+            ads.category_id
+        FROM ads
+        JOIN users ON ads.user_id = users.id
+        JOIN categories ON ads.category_id = categories.id
+        WHERE ads.expires_at >= CURDATE()
     """
 
     params = []
@@ -56,17 +59,12 @@ def index():
     cursor.execute(query, params)
     ads = cursor.fetchall()
 
-    # Group ads by province → town
     grouped_ads = {}
     for ad in ads:
-        province = ad["province"]
-        town = ad["town"]
+        grouped_ads.setdefault(ad["province"], {})
+        grouped_ads[ad["province"]].setdefault(ad["town"], [])
+        grouped_ads[ad["province"]][ad["town"]].append(ad)
 
-        grouped_ads.setdefault(province, {})
-        grouped_ads[province].setdefault(town, [])
-        grouped_ads[province][town].append(ad)
-
-    # Load categories for dropdown
     cursor.execute("SELECT id, name FROM categories")
     categories = cursor.fetchall()
 
@@ -80,6 +78,7 @@ def index():
         category_id=category_id,
         search=search
     )
+
 
 
 
@@ -520,6 +519,8 @@ def logout():
     return redirect(url_for("login"))
 
 # ---------------- POST AD ----------------
+from datetime import datetime, timedelta
+
 @app.route("/post", methods=["GET", "POST"])
 def post_ad():
     if "user_id" not in session:
@@ -529,13 +530,6 @@ def post_ad():
     categories = get_categories()
     provinces = get_provinces()
 
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    # Load ALL towns so the dropdown works
-    cursor.execute("SELECT id, name FROM towns ORDER BY name")
-    towns = cursor.fetchall()
-
     if request.method == "POST":
         title = request.form["title"]
         category_id = request.form["category_id"]
@@ -543,12 +537,28 @@ def post_ad():
         contact = request.form["contact"]
         province_id = request.form["province_id"]
         town_id = request.form["town_id"]
+        expires_at = request.form["expires_at"]
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
         cursor.execute("""
-            INSERT INTO ads (title, category_id, description, contact, user_id, province, town)
-            VALUES (%s, %s, %s, %s, %s,
+            INSERT INTO ads (
+                title,
+                category_id,
+                description,
+                contact,
+                user_id,
+                province,
+                town,
+                expires_at
+            )
+            VALUES (
+                %s, %s, %s, %s, %s,
                 (SELECT name FROM provinces WHERE id = %s),
-                (SELECT name FROM towns WHERE id = %s))
+                (SELECT name FROM towns WHERE id = %s),
+                %s
+            )
         """, (
             title,
             category_id,
@@ -556,22 +566,24 @@ def post_ad():
             contact,
             session["user_id"],
             province_id,
-            town_id
+            town_id,
+            expires_at
         ))
 
         conn.commit()
+        cursor.close()
+        conn.close()
+
         flash("Ad posted successfully!", "success")
         return redirect(url_for("index"))
-
-    cursor.close()
-    conn.close()
 
     return render_template(
         "post_ad.html",
         categories=categories,
-        provinces=provinces,
-        towns=towns
+        provinces=provinces
     )
+
+
 
 
 
