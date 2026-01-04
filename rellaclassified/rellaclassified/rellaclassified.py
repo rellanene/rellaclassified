@@ -138,11 +138,13 @@ def login():
     return render_template("login.html")
 
 #------------------ EDIT AD --------------
-@app.route("/admin/edit_ad/<int:ad_id>", methods=["GET", "POST"])
+from datetime import date
+
+@app.route("/edit/<int:ad_id>", methods=["GET", "POST"])
 def edit_ad(ad_id):
-    if not session.get("is_admin"):
-        flash("Unauthorized access", "danger")
-        return redirect(url_for("index"))
+    if "user_id" not in session:
+        flash("Login required.", "warning")
+        return redirect(url_for("login"))
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -152,46 +154,75 @@ def edit_ad(ad_id):
     ad = cursor.fetchone()
 
     if not ad:
-        cursor.close()
-        conn.close()
-        flash("Ad not found", "danger")
+        flash("Ad not found.", "danger")
         return redirect(url_for("index"))
 
-    # Update ad
+    # Permission check
+    if not session.get("is_admin") and ad["user_id"] != session["user_id"]:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for("index"))
+
+    # Load categories & provinces
+    cursor.execute("SELECT id, name FROM categories")
+    categories = cursor.fetchall()
+
+    cursor.execute("SELECT id, name FROM provinces ORDER BY name")
+    provinces = cursor.fetchall()
+
+    # Load towns for the ad's province
+    cursor.execute("""
+        SELECT id, name FROM towns
+        WHERE province_id = (
+            SELECT id FROM provinces WHERE name = %s
+        )
+        ORDER BY name
+    """, (ad["province"],))
+    towns = cursor.fetchall()
+
     if request.method == "POST":
         title = request.form["title"]
         category_id = request.form["category_id"]
         description = request.form["description"]
         contact = request.form["contact"]
-        province = request.form["province"]
-        town = request.form["town"]
+        province_id = request.form["province_id"]
+        town_id = request.form["town_id"]
+        expires_at = request.form["expires_at"]
+
+        if expires_at < date.today().isoformat():
+            flash("Expiry date cannot be in the past.", "danger")
+            return redirect(url_for("edit_ad", ad_id=ad_id))
 
         cursor.execute("""
-            UPDATE ads
-            SET title=%s,
+            UPDATE ads SET
+                title=%s,
                 category_id=%s,
                 description=%s,
                 contact=%s,
-                province=%s,
-                town=%s
+                province=(SELECT name FROM provinces WHERE id=%s),
+                town=(SELECT name FROM towns WHERE id=%s),
+                expires_at=%s
             WHERE id=%s
-        """, (title, category_id, description, contact, province, town, ad_id))
+        """, (
+            title, category_id, description, contact,
+            province_id, town_id, expires_at, ad_id
+        ))
 
         conn.commit()
-        cursor.close()
-        conn.close()
-
-        flash("Ad updated successfully", "success")
+        flash("Ad updated successfully.", "success")
         return redirect(url_for("index"))
-
-    # Load categories for dropdown
-    cursor.execute("SELECT id, name FROM categories")
-    categories = cursor.fetchall()
 
     cursor.close()
     conn.close()
 
-    return render_template("edit_ad.html", ad=ad, categories=categories)
+    return render_template(
+        "edit_ad.html",
+        ad=ad,
+        categories=categories,
+        provinces=provinces,
+        towns=towns,
+        today=date.today().isoformat()
+    )
+
 
 #------------------ADD PROVINCE----------
 @app.route("/admin/add_province", methods=["GET", "POST"])
