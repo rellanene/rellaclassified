@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Gallery{% endblock %}
+
+{% block content %}
+
+<style>
+    .btn {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: bold;
+        text-decoration: none;
+        color: #ffffff;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .btn-download {
+        background: #C06C84; /* Rose Pink */
+    }
+
+    .btn-download:hover {
+        background: #6C5B7B; /* Deep Plum */
+    }
+
+    .btn-delete {
+        background: #E74C3C; /* Red */
+    }
+
+    .btn-delete:hover {
+        opacity: 0.85;
+    }
+</style>
+
+
+<div style="
+    min-height:100vh;
+    background:#FAF3E0;
+    padding:40px 20px;
+">
+
+    <div style="max-width:1100px;margin:0 auto;">
+
+        <h2 style="color:#6C5B7B;margin-bottom:30px;">📷 Ad Gallery</h2>
+
+        {% for ad in ads %}
+        <div style="
+            background:#ffffff;
+            padding:25px;
+            margin-bottom:30px;
+            border-radius:14px;
+            box-shadow:0 8px 20px rgba(0,0,0,0.08);
+        ">
+
+            <h3 style="color:#4A3F5F;margin-bottom:15px;">
+                {{ ad.title }}
+            </h3>
+
+            <!-- Upload (ADMIN ONLY) -->
+            {% if session.get("is_admin") %}
+            <form method="POST" enctype="multipart/form-data" style="margin-bottom:20px;">
+                <input type="hidden" name="ad_id" value="{{ ad.id }}">
+
+                <input type="file" name="photo" required
+                       style="margin-bottom:10px;">
+
+                <button type="submit"
+                        style="
+                            background:#C06C84;
+                            color:white;
+                            padding:8px 16px;
+                            border:none;
+                            border-radius:6px;
+                            font-weight:bold;
+                            cursor:pointer;
+                        "
+                        onmouseover="this.style.background='#6C5B7B';"
+                        onmouseout="this.style.background='#C06C84';">
+                    Upload Photo
+                </button>
+            </form>
+            {% endif %}
+
+            <!-- Photos -->
+            {% if photos_by_ad[ad.id] %}
+            <div style="display:flex;gap:15px;flex-wrap:wrap;">
+
+                {% for file in photos_by_ad[ad.id] %}
+                <div style="text-align:center;">
+
+                    <img src="{{ url_for('serve_photo', ad_id=ad.id, filename=file) }}"
+                         style="
+                            width:140px;
+                            height:140px;
+                            object-fit:cover;
+                            border-radius:10px;
+                            box-shadow:0 4px 10px rgba(0,0,0,0.1);
+                         ">
+
+                    <div style="margin-top:6px;">
+
+                        <a href="{{ url_for('download_photo', ad_id=ad.id, filename=file) }}"
+                           style="
+                            background:#C06C84;
+                            color:white;
+                            padding:8px 16px;
+                            border:none;
+                            border-radius:6px;
+                            font-weight:bold;
+                            cursor:pointer;
+                        "
+                        onmouseover="this.style.background='#6C5B7B';"
+                        onmouseout="this.style.background='#C06C84';">
+                             Download
+                        </a>
+
+                        {% if session.get("is_admin") %}
+                        |
+                        <a href="{{ url_for('delete_photo', ad_id=ad.id, filename=file) }}"
+                           onclick="return confirm('Delete this photo?');"
+                           style="
+                            background:#C06C84;
+                            color:white;
+                            padding:8px 16px;
+                            border:none;
+                            border-radius:6px;
+                            font-weight:bold;
+                            cursor:pointer;
+                        "
+                        onmouseover="this.style.background='#6C5B7B';"
+                        onmouseout="this.style.background='#C06C84';">
+                             Delete
+                        </a>
+                        {% endif %}
+
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+            {% else %}
+                <p style="color:#777;">No photos uploaded for this ad.</p>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endblock %}

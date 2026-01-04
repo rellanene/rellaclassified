@@ -2,9 +2,24 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
+from flask import send_from_directory
+from werkzeug.utils import secure_filename
+
+import os
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+
+
+
+
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # change in production
+
+UPLOAD_FOLDER = os.path.join(app.root_path, "uploads")
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 db_config = {
     "host": "localhost",
@@ -26,23 +41,23 @@ def index():
     cursor = conn.cursor(dictionary=True)
 
     query = """
-        SELECT 
-            ads.id,
-            ads.title,
-            ads.description,
-            ads.contact,
-            ads.province,
-            ads.town,
-            ads.expires_at,
-            GREATEST(DATEDIFF(ads.expires_at, CURDATE()), 0) AS days_left,
-            users.username,
-            categories.name AS category,
-            ads.category_id
-        FROM ads
-        JOIN users ON ads.user_id = users.id
-        JOIN categories ON ads.category_id = categories.id
-        WHERE ads.expires_at >= CURDATE()
-    """
+SELECT 
+    ads.id,
+    ads.title,
+    ads.description,
+    ads.contact,
+    ads.province,
+    ads.town,
+    ads.expires_at,
+    users.username,
+    categories.name AS category,
+    ads.category_id,
+    GREATEST(DATEDIFF(ads.expires_at, NOW()), 0) AS days_left
+FROM ads
+JOIN users ON ads.user_id = users.id
+JOIN categories ON ads.category_id = categories.id
+WHERE 1=1
+"""
 
     params = []
 
@@ -59,12 +74,37 @@ def index():
     cursor.execute(query, params)
     ads = cursor.fetchall()
 
+    # ------------------------------
+    # 🔹 Build photos_by_ad dictionary
+    # ------------------------------
+    photos_by_ad = {}
+
+    for ad in ads:
+        ad_id = ad["id"]
+        ad_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"ad_{ad_id}")
+
+        if os.path.exists(ad_folder):
+            photos = [
+                f for f in os.listdir(ad_folder)
+                if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
+            ]
+            photos_by_ad[ad_id] = photos
+        else:
+            photos_by_ad[ad_id] = []
+
+    # ------------------------------
+    # Group ads by province → town
+    # ------------------------------
     grouped_ads = {}
     for ad in ads:
-        grouped_ads.setdefault(ad["province"], {})
-        grouped_ads[ad["province"]].setdefault(ad["town"], [])
-        grouped_ads[ad["province"]][ad["town"]].append(ad)
+        province = ad["province"]
+        town = ad["town"]
 
+        grouped_ads.setdefault(province, {})
+        grouped_ads[province].setdefault(town, [])
+        grouped_ads[province][town].append(ad)
+
+    # Categories for dropdown
     cursor.execute("SELECT id, name FROM categories")
     categories = cursor.fetchall()
 
@@ -76,8 +116,10 @@ def index():
         grouped_ads=grouped_ads,
         categories=categories,
         category_id=category_id,
-        search=search
+        search=search,
+        photos_by_ad=photos_by_ad
     )
+
 
 
 
@@ -222,6 +264,114 @@ def edit_ad(ad_id):
         towns=towns,
         today=date.today().isoformat()
     )
+    
+#---------------GALLERY UPLOAD DELETE VIEW--------
+@app.route("/admin/gallery", methods=["GET", "POST"])
+def admin_gallery():
+    if not session.get("is_admin"):
+        flash("Admin access only.", "danger")
+        return redirect(url_for("index"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Load ads
+    cursor.execute("SELECT id, title FROM ads ORDER BY created_at DESC")
+    ads = cursor.fetchall()
+
+    # Handle upload
+    if request.method == "POST":
+        ad_id = request.form["ad_id"]
+        file = request.files["photo"]
+
+        if file and file.filename:
+            ad_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"ad_{ad_id}")
+            os.makedirs(ad_folder, exist_ok=True)
+
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(ad_folder, filename))
+
+            flash("Photo uploaded successfully", "success")
+
+        return redirect(url_for("admin_gallery"))
+
+    # Build photos_by_ad dictionary
+    photos_by_ad = {}
+
+    for ad in ads:
+        ad_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"ad_{ad['id']}")
+        if os.path.exists(ad_folder):
+            photos_by_ad[ad["id"]] = os.listdir(ad_folder)
+        else:
+            photos_by_ad[ad["id"]] = []
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "gallery.html",
+        ads=ads,
+        photos_by_ad=photos_by_ad
+    )
+
+
+
+#---------------DELETE PHOTO--------------
+@app.route("/admin/gallery/delete/<ad_id>/<filename>")
+def delete_photo(ad_id, filename):
+    if not session.get("is_admin"):
+        flash("Admin access only.", "danger")
+        return redirect(url_for("index"))
+
+    photo_path = os.path.join(
+        app.config["UPLOAD_FOLDER"], f"ad_{ad_id}", filename
+    )
+
+    if os.path.exists(photo_path):
+        os.remove(photo_path)
+        flash("Photo deleted.", "success")
+    else:
+        flash("Photo not found.", "danger")
+
+    return redirect(url_for("admin_gallery", ad_id=ad_id))
+
+
+#------------------DOWNLOAD PHOTO-----------
+@app.route("/admin/gallery/download/<ad_id>/<filename>")
+def download_photo(ad_id, filename):
+    ad_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"ad_{ad_id}")
+    return send_from_directory(ad_folder, filename, as_attachment=True)
+
+#----------------VIEW PHOTO---------------
+@app.route("/ads/<int:ad_id>/photos")
+def view_ad_photos(ad_id):
+    ad_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"ad_{ad_id}")
+    photos = []
+
+    if os.path.exists(ad_folder):
+        photos = os.listdir(ad_folder)
+
+    return render_template("ad_photos.html", photos=photos, ad_id=ad_id)
+
+
+
+
+
+#-----------------SERVE PHOTO---------------
+@app.route("/gallery/<int:ad_id>/<filename>")
+def view_photo(ad_id, filename):
+    folder = os.path.join(app.config["UPLOAD_FOLDER"], f"ad_{ad_id}")
+    return send_from_directory(folder, filename)
+
+#------------------PHOTO SERVE--------------------
+@app.route("/gallery/photo/<int:ad_id>/<filename>")
+def serve_photo(ad_id, filename):
+    ad_folder = os.path.join(app.config["UPLOAD_FOLDER"], f"ad_{ad_id}")
+    return send_from_directory(ad_folder, filename)
+
+#------------------
+
+    
 
 
 #------------------ADD PROVINCE----------
